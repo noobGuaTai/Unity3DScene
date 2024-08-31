@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class CharacterMovement : MonoBehaviour
+public class Old_CharacterMovement : MonoBehaviour
 {
     public Vector3 CurrentInput { get; private set; }
     public float MaxWalkSpeed = 5;

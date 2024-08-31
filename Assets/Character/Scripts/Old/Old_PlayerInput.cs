@@ -3,15 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerInput : MonoBehaviour
+public class Old_PlayerInput : MonoBehaviour
 {
     public Photographer photographer;
     public Transform followingTarget;
 
-    private CharacterMovement characterMovement;
+    private Old_CharacterMovement characterMovement;
     private void Awake()
     {
-        characterMovement = GetComponent<CharacterMovement>();
+        characterMovement = GetComponent<Old_CharacterMovement>();
         
         photographer.InitCamera(followingTarget);
     }
