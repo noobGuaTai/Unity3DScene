@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using KinematicCharacterController;
+using System;
 
 /// <summary>
 /// 记录角色可接受的玩家输入
@@ -20,6 +21,12 @@ public class CharacterController : MonoBehaviour, ICharacterController
     public float maxMoveSpeed = 5f;// 最大移动速度
     public float moveSharpness = 15f;// 加减速敏锐度
     public float rotationSharpness = 10f;// 旋转敏锐度
+    public float inputTime = 0f;// 玩家输入的时长
+
+    private Vector3 gravity = new Vector3(0, -10f, 0);
+    public Vector3 currentVelocity = Vector3.zero;
+    public Vector3 targetMoveVelocity = Vector3.zero;
+
 
     void Start()
     {
@@ -42,9 +49,9 @@ public class CharacterController : MonoBehaviour, ICharacterController
 
         relativeMoveInputVector = cameraPlanarRotation * moveInputVector;
         lookInputVector = cameraPlanarDirection;
-        print(cameraPlanarRotation);
+        // print(cameraPlanarRotation);
     }
-
+    #region ICharacterController
     public void AfterCharacterUpdate(float deltaTime)
     {
     }
@@ -77,29 +84,65 @@ public class CharacterController : MonoBehaviour, ICharacterController
     public void ProcessHitStabilityReport(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, Vector3 atCharacterPosition, Quaternion atCharacterRotation, ref HitStabilityReport hitStabilityReport)
     {
     }
+    #endregion
 
     public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
     {
+        // if (lookInputVector != Vector3.zero && rotationSharpness > 0f)
+        // {
+        //     // Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, lookInputVector, 1 - Mathf.Exp(rotationSharpness * deltaTime)).normalized;
+        //     // currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp); 
+        //     // print(smoothLookInputDirection);
+        //     currentRotation = Quaternion.LookRotation(lookInputVector, motor.CharacterUp);
+        // }
+
+        // 锁定状态下的旋转自身
         if (lookInputVector != Vector3.zero && rotationSharpness > 0f)
         {
             // Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, lookInputVector, 1 - Mathf.Exp(rotationSharpness * deltaTime)).normalized;
             // currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp); 
             // print(smoothLookInputDirection);
-            currentRotation = Quaternion.LookRotation(lookInputVector, motor.CharacterUp);
+            Vector3 smoothLookInputDirection = Vector3.Lerp(motor.CharacterForward, lookInputVector, 1f).normalized;
+            currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
+            // currentRotation = Quaternion.LookRotation(lookInputVector, motor.CharacterUp);
         }
+
+        // 未锁定状态下的旋转自身
+        // if (relativeMoveInputVector != Vector3.zero)
+        // {
+        //     Vector3 targetDirection = relativeMoveInputVector.normalized;
+        //     Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, targetDirection, 1 - Mathf.Exp(-rotationSharpness * deltaTime)).normalized;
+        //     currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
+        // }
     }
 
     public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
-        Vector3 targetMoveVelocity = Vector3.zero;
+        if (relativeMoveInputVector != Vector3.zero)
+        {
+            inputTime += deltaTime;
+            inputTime = Mathf.Clamp01(inputTime);
+        }
+        else
+        {
+            inputTime -= deltaTime * 2;
+            inputTime = Mathf.Clamp01(inputTime);
+        }
+        this.currentVelocity = currentVelocity;
         if (motor.GroundingStatus.IsStableOnGround)// 如果玩家站在地面上
         {
-            currentVelocity = motor.GetDirectionTangentToSurface(currentVelocity, motor.GroundingStatus.GroundNormal) * currentVelocity.magnitude;
+            _ = motor.GetDirectionTangentToSurface(currentVelocity, motor.GroundingStatus.GroundNormal) * currentVelocity.magnitude;
             Vector3 inputRight = Vector3.Cross(relativeMoveInputVector, motor.CharacterUp);
             Vector3 reorientedInput = Vector3.Cross(motor.GroundingStatus.GroundNormal, inputRight).normalized * relativeMoveInputVector.magnitude;
             targetMoveVelocity = reorientedInput * maxMoveSpeed;
-            // currentVelocity = Vector3.Lerp(currentVelocity, targetMoveVelocity, 1 - Mathf.Exp(moveSharpness * deltaTime));
-            currentVelocity = targetMoveVelocity;
+            if (relativeMoveInputVector != Vector3.zero)
+                currentVelocity = Vector3.Lerp(currentVelocity, targetMoveVelocity, moveSharpness * inputTime);
+            else
+                currentVelocity = Vector3.Lerp(currentVelocity, targetMoveVelocity, 1 - moveSharpness * inputTime);
+        }
+        else
+        {
+            currentVelocity += gravity * deltaTime;
         }
     }
 
