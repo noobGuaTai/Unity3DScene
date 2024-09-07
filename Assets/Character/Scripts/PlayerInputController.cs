@@ -13,12 +13,20 @@ public enum CameraMode
     Lock
 }
 
+public enum PlayerMoveState
+{
+    Idle,
+    Run,
+    Dash
+}
+
 public class PlayerInputController : MonoBehaviour
 {
     public Camera followedCamera;
     // public Transform cameraFollowPoint;
     public Animator animator;
     public CameraMode cameraMode = CameraMode.UnLock;
+    public PlayerMoveState playerMoveState = PlayerMoveState.Idle;
     public float walkSpeed = 5f;
     public float runSpeed = 10f;
     public float allInputTime = 0f;// 玩家输入的时长(x和y)
@@ -34,7 +42,7 @@ public class PlayerInputController : MonoBehaviour
     private PlayerCharacterInputs playerCharacterInputs;
     private Transform selfTransform;
     public float forwardSpeed = 0f;  // 未锁定 当前速度(前后)
-    private float forwardTargetSpeed = 0f; // 未锁定 目标速度(前后)
+    public float forwardTargetSpeed = 0f; // 未锁定 目标速度(前后)
 
     private float verticalSpeed = 0f;  // 锁定目标 当前速度(前后)
     private float verticalTargetSpeed = 0f;  // 锁定目标 当前速度(前后)
@@ -58,6 +66,7 @@ public class PlayerInputController : MonoBehaviour
     {
         HandlePlayerInput();
         UpdateInputTime();
+        UpdatePlayerMoveState();
         UpdateAnimationRefreshMode();
     }
 
@@ -83,6 +92,15 @@ public class PlayerInputController : MonoBehaviour
         lookInput = context.ReadValue<Vector2>();
     }
 
+    public void PlayerDash(InputAction.CallbackContext context)
+    {
+        var isPressed = context.ReadValueAsButton();
+        if (playerMoveState == PlayerMoveState.Run)
+        {
+            playerMoveState = PlayerMoveState.Dash;
+        }
+    }
+
     /// <summary>
     /// 把玩家的输入保存到结构体里
     /// </summary>
@@ -95,7 +113,7 @@ public class PlayerInputController : MonoBehaviour
     }
 
     /// <summary>
-    /// 根据镜头模型选择更新哪个动画（和数值）
+    /// 根据镜头类型选择更新哪个动画（和数值）
     /// </summary>
     void UpdateAnimationRefreshMode()
     {
@@ -106,7 +124,7 @@ public class PlayerInputController : MonoBehaviour
                 forwardSpeed = Mathf.Lerp(forwardSpeed, forwardTargetSpeed, 1 - allInputTime);
             else
                 forwardSpeed = Mathf.Lerp(forwardSpeed, forwardTargetSpeed, allInputTime);
-            animator.SetFloat("Vertical Speed", forwardSpeed);
+            animator.SetFloat("VerticalSpeed", forwardSpeed);
         }
         else
         {
@@ -119,8 +137,8 @@ public class PlayerInputController : MonoBehaviour
                 horizontalSpeed = Mathf.Lerp(horizontalSpeed, HorizontalTargetSpeed, 1 - zInputTime);
             else
                 horizontalSpeed = Mathf.Lerp(horizontalSpeed, HorizontalTargetSpeed, zInputTime);
-            animator.SetFloat("Vertical Speed", horizontalSpeed / 2);
-            animator.SetFloat("Horizontal Speed", verticalSpeed / 4);
+            animator.SetFloat("VerticalSpeed", horizontalSpeed);
+            animator.SetFloat("HorizontalSpeed", verticalSpeed);
         }
     }
 
@@ -172,5 +190,15 @@ public class PlayerInputController : MonoBehaviour
             unLockCamera.Priority = 10;
         }
 
+    }
+
+    void UpdatePlayerMoveState()
+    {
+        playerMoveState = playerMoveState != PlayerMoveState.Dash ? (moveInput.x != 0 || moveInput.y != 0) ? PlayerMoveState.Run : PlayerMoveState.Idle : PlayerMoveState.Dash;
+        playerMoveState = (moveInput.x == 0 && moveInput.y == 0) ? PlayerMoveState.Idle : playerMoveState;
+
+        forwardTargetSpeed = (playerMoveState == PlayerMoveState.Dash) && (moveInput.x != 0 || moveInput.y != 0) ? 2f : forwardTargetSpeed;
+
+        characterController.maxMoveSpeed = playerMoveState == PlayerMoveState.Dash ? 3.84f * 2 : 3.84f;
     }
 }
