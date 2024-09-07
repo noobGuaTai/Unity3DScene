@@ -117,7 +117,7 @@ public class PlayerInputController : MonoBehaviour
     /// </summary>
     void UpdateAnimationRefreshMode()
     {
-        if (cameraMode == CameraMode.UnLock)
+        if (cameraMode == CameraMode.UnLock || playerMoveState == PlayerMoveState.Dash)
         {
             // 对移动动画插值(未锁定视角)
             if (moveInput.x == 0 && moveInput.y == 0)
@@ -176,7 +176,7 @@ public class PlayerInputController : MonoBehaviour
             {
                 cameraTargetGroup.AddMember(nearestEnemy.transform, 0.5f, 0);
                 cameraMode = CameraMode.Lock;
-                animator.SetBool("CameraMode", true);
+                animator.SetBool("LockCamera", true);
                 lockCamera.Priority = 10;
                 unLockCamera.Priority = 5;
             }
@@ -185,13 +185,16 @@ public class PlayerInputController : MonoBehaviour
         {
             cameraTargetGroup.RemoveMember(cameraTargetGroup?.m_Targets[1].target);
             cameraMode = CameraMode.UnLock;
-            animator.SetBool("CameraMode", false);
+            animator.SetBool("LockCamera", false);
             lockCamera.Priority = 5;
             unLockCamera.Priority = 10;
         }
 
     }
 
+    /// <summary>
+    /// 判断玩家是否在疾跑
+    /// </summary>
     void UpdatePlayerMoveState()
     {
         playerMoveState = playerMoveState != PlayerMoveState.Dash ? (moveInput.x != 0 || moveInput.y != 0) ? PlayerMoveState.Run : PlayerMoveState.Idle : PlayerMoveState.Dash;
@@ -200,5 +203,6 @@ public class PlayerInputController : MonoBehaviour
         forwardTargetSpeed = (playerMoveState == PlayerMoveState.Dash) && (moveInput.x != 0 || moveInput.y != 0) ? 2f : forwardTargetSpeed;
 
         characterController.maxMoveSpeed = playerMoveState == PlayerMoveState.Dash ? 3.84f * 2 : 3.84f;
+        animator.SetBool("IsDashing", playerMoveState == PlayerMoveState.Dash);
     }
 }
