@@ -19,19 +19,19 @@ public class CharacterController : MonoBehaviour, ICharacterController
     public Vector3 relativeMoveInputVector;// 相对于相机的移动向量
     public Vector3 lookInputVector;// 相机方向输入变量
     public float maxMoveSpeed = 5f;// 最大移动速度
-    public float moveSharpness = 15f;// 加减速敏锐度
-    public float rotationSharpness = 10f;// 旋转敏锐度
-    public float inputTime = 0f;// 玩家输入的时长
+
 
     private Vector3 gravity = new Vector3(0, -10f, 0);
     public Vector3 currentVelocity = Vector3.zero;
     public Vector3 targetMoveVelocity = Vector3.zero;
+    private PlayerInputController playerInputController;
 
 
     void Start()
     {
         motor = GetComponent<KinematicCharacterMotor>();
         motor.CharacterController = this;
+        playerInputController = GetComponent<PlayerInputController>();
     }
 
     public void SetInputs(ref PlayerCharacterInputs inputs)
@@ -88,46 +88,33 @@ public class CharacterController : MonoBehaviour, ICharacterController
 
     public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
     {
-        // if (lookInputVector != Vector3.zero && rotationSharpness > 0f)
-        // {
-        //     // Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, lookInputVector, 1 - Mathf.Exp(rotationSharpness * deltaTime)).normalized;
-        //     // currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp); 
-        //     // print(smoothLookInputDirection);
-        //     currentRotation = Quaternion.LookRotation(lookInputVector, motor.CharacterUp);
-        // }
-
-        // 锁定状态下的旋转自身
-        if (lookInputVector != Vector3.zero && rotationSharpness > 0f)
+        if (playerInputController.cameraMode == CameraMode.Lock)
         {
-            // Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, lookInputVector, 1 - Mathf.Exp(rotationSharpness * deltaTime)).normalized;
-            // currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp); 
-            // print(smoothLookInputDirection);
-            Vector3 smoothLookInputDirection = Vector3.Lerp(motor.CharacterForward, lookInputVector, 1f).normalized;
-            currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
-            // currentRotation = Quaternion.LookRotation(lookInputVector, motor.CharacterUp);
+            // 锁定状态下的旋转自身
+            if (lookInputVector != Vector3.zero)
+            {
+                // Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, lookInputVector, 1 - Mathf.Exp(rotationSharpness * deltaTime)).normalized;
+                // currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp); 
+                // print(smoothLookInputDirection);
+                Vector3 smoothLookInputDirection = Vector3.Lerp(motor.CharacterForward, lookInputVector, 1f).normalized;
+                currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
+                // currentRotation = Quaternion.LookRotation(lookInputVector, motor.CharacterUp);
+            }
         }
-
-        // 未锁定状态下的旋转自身
-        // if (relativeMoveInputVector != Vector3.zero)
-        // {
-        //     Vector3 targetDirection = relativeMoveInputVector.normalized;
-        //     Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, targetDirection, 1 - Mathf.Exp(-rotationSharpness * deltaTime)).normalized;
-        //     currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
-        // }
+        else
+        {
+            // 未锁定状态下的旋转自身
+            if (relativeMoveInputVector != Vector3.zero)
+            {
+                Vector3 targetDirection = relativeMoveInputVector.normalized;
+                Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, targetDirection, 1 - Mathf.Exp(-10 * deltaTime)).normalized;
+                currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
+            }
+        }
     }
 
     public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
-        if (relativeMoveInputVector != Vector3.zero)
-        {
-            inputTime += deltaTime;
-            inputTime = Mathf.Clamp01(inputTime);
-        }
-        else
-        {
-            inputTime -= deltaTime * 2;
-            inputTime = Mathf.Clamp01(inputTime);
-        }
         this.currentVelocity = currentVelocity;
         if (motor.GroundingStatus.IsStableOnGround)// 如果玩家站在地面上
         {
@@ -136,9 +123,9 @@ public class CharacterController : MonoBehaviour, ICharacterController
             Vector3 reorientedInput = Vector3.Cross(motor.GroundingStatus.GroundNormal, inputRight).normalized * relativeMoveInputVector.magnitude;
             targetMoveVelocity = reorientedInput * maxMoveSpeed;
             if (relativeMoveInputVector != Vector3.zero)
-                currentVelocity = Vector3.Lerp(currentVelocity, targetMoveVelocity, moveSharpness * inputTime);
+                currentVelocity = Vector3.Lerp(currentVelocity, targetMoveVelocity, playerInputController.allInputTime);
             else
-                currentVelocity = Vector3.Lerp(currentVelocity, targetMoveVelocity, 1 - moveSharpness * inputTime);
+                currentVelocity = Vector3.Lerp(currentVelocity, targetMoveVelocity, 1 - playerInputController.allInputTime);
         }
         else
         {
