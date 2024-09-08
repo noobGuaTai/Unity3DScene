@@ -13,11 +13,12 @@ public enum CameraMode
     Lock
 }
 
-public enum PlayerMoveState
+public enum PlayerState
 {
     Idle,
     Run,
-    Dash
+    Dash,
+    Attack
 }
 
 public class PlayerInputController : MonoBehaviour
@@ -26,7 +27,7 @@ public class PlayerInputController : MonoBehaviour
     // public Transform cameraFollowPoint;
     public Animator animator;
     public CameraMode cameraMode = CameraMode.UnLock;
-    public PlayerMoveState playerMoveState = PlayerMoveState.Idle;
+    public PlayerState playerState = PlayerState.Idle;
     public float walkSpeed = 5f;
     public float runSpeed = 10f;
     public float allInputTime = 0f;// 玩家输入的时长(x和y)
@@ -52,6 +53,8 @@ public class PlayerInputController : MonoBehaviour
     private CinemachineVirtualCamera lockCamera;
     private CinemachineFreeLook unLockCamera;
 
+    private bool isPressAttack = false;// 只要点过一下攻击键，就会置true
+
     void Start()
     {
         selfTransform = transform;
@@ -66,7 +69,7 @@ public class PlayerInputController : MonoBehaviour
     {
         HandlePlayerInput();
         UpdateInputTime();
-        UpdatePlayerMoveState();
+        UpdatePlayerState();
         UpdateAnimationRefreshMode();
     }
 
@@ -95,9 +98,18 @@ public class PlayerInputController : MonoBehaviour
     public void PlayerDash(InputAction.CallbackContext context)
     {
         var isPressed = context.ReadValueAsButton();
-        if (playerMoveState == PlayerMoveState.Run)
+        if (playerState == PlayerState.Run)
         {
-            playerMoveState = PlayerMoveState.Dash;
+            playerState = PlayerState.Dash;
+        }
+    }
+
+    public void PlayerAttack(InputAction.CallbackContext context)
+    {
+        isPressAttack = context.ReadValueAsButton() == true ? true : isPressAttack;
+        if (isPressAttack && playerState != PlayerState.Attack)
+        {
+            animator.SetBool("Attack", true);
         }
     }
 
@@ -117,7 +129,7 @@ public class PlayerInputController : MonoBehaviour
     /// </summary>
     void UpdateAnimationRefreshMode()
     {
-        if (cameraMode == CameraMode.UnLock || playerMoveState == PlayerMoveState.Dash)
+        if (cameraMode == CameraMode.UnLock || playerState == PlayerState.Dash)
         {
             // 对移动动画插值(未锁定视角)
             if (moveInput.x == 0 && moveInput.y == 0)
@@ -193,16 +205,63 @@ public class PlayerInputController : MonoBehaviour
     }
 
     /// <summary>
-    /// 判断玩家是否在疾跑
+    /// 判断玩家的运动状态
     /// </summary>
-    void UpdatePlayerMoveState()
+    void UpdatePlayerState()
     {
-        playerMoveState = playerMoveState != PlayerMoveState.Dash ? (moveInput.x != 0 || moveInput.y != 0) ? PlayerMoveState.Run : PlayerMoveState.Idle : PlayerMoveState.Dash;
-        playerMoveState = (moveInput.x == 0 && moveInput.y == 0) ? PlayerMoveState.Idle : playerMoveState;
+        // 疾跑判断
+        playerState = playerState != PlayerState.Dash ? playerState == PlayerState.Attack ? playerState : (moveInput.x != 0 || moveInput.y != 0) ? PlayerState.Run : PlayerState.Idle : PlayerState.Dash;
+        playerState = (moveInput.x == 0 && moveInput.y == 0 && playerState != PlayerState.Attack) ? PlayerState.Idle : playerState;
 
-        forwardTargetSpeed = (playerMoveState == PlayerMoveState.Dash) && (moveInput.x != 0 || moveInput.y != 0) ? 2f : forwardTargetSpeed;
+        forwardTargetSpeed = (playerState == PlayerState.Dash) && (moveInput.x != 0 || moveInput.y != 0) ? 2f : forwardTargetSpeed;
 
-        characterController.maxMoveSpeed = playerMoveState == PlayerMoveState.Dash ? 3.84f * 2 : 3.84f;
-        animator.SetBool("IsDashing", playerMoveState == PlayerMoveState.Dash);
+        characterController.maxMoveSpeed = playerState == PlayerState.Dash ? 3.84f * 2 : 3.84f;
+        animator.SetBool("IsDashing", playerState == PlayerState.Dash);
+        animator.SetBool("Move", forwardTargetSpeed != 0);
     }
+
+    /// <summary>
+    /// 动画开始时/预输入开始时清除攻击预输入标记
+    /// </summary>
+    void ClearAttackSign()
+    {
+        animator.SetBool("Attack", false);
+        isPressAttack = false;
+    }
+
+    /// <summary>
+    /// 记录攻击预输入
+    /// </summary>
+    void SaveAttackSign()
+    {
+        animator.SetBool("Attack", isPressAttack);
+    }
+
+    /// <summary>
+    /// 每个攻击动作后摇可取消时判断是否退出攻击状态
+    /// </summary>
+    void IsExitAttackState()
+    {
+        if (!animator.GetBool("Attack") && forwardSpeed != 0)
+        {
+            playerState = PlayerState.Idle;
+        }
+    }
+
+    void IsExitAttackStateFinal()
+    {
+        if (!animator.GetBool("Attack"))
+        {
+            playerState = PlayerState.Idle;
+        }
+    }
+
+    /// <summary>
+    /// 在攻击开始到攻击后摇结束，玩家处于攻击状态
+    /// </summary>
+    void SetAttackState()
+    {
+        playerState = PlayerState.Attack;
+    }
+
 }

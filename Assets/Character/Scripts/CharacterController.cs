@@ -25,6 +25,7 @@ public class CharacterController : MonoBehaviour, ICharacterController
     public Vector3 currentVelocity = Vector3.zero;
     public Vector3 targetMoveVelocity = Vector3.zero;
     private PlayerInputController playerInputController;
+    public Vector3 rootMotionSpeed;
 
 
     void Start()
@@ -91,7 +92,7 @@ public class CharacterController : MonoBehaviour, ICharacterController
         if (playerInputController.cameraMode == CameraMode.Lock)
         {
             // 锁定状态下的旋转自身
-            if (lookInputVector != Vector3.zero && playerInputController.playerMoveState != PlayerMoveState.Dash)
+            if (lookInputVector != Vector3.zero && playerInputController.playerState != PlayerState.Dash)
             {
                 // Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, lookInputVector, 1 - Mathf.Exp(rotationSharpness * deltaTime)).normalized;
                 // currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp); 
@@ -113,33 +114,51 @@ public class CharacterController : MonoBehaviour, ICharacterController
         else
         {
             // 未锁定状态下的旋转自身
-            if (relativeMoveInputVector != Vector3.zero)
+            if (playerInputController.playerState != PlayerState.Attack)
             {
-                Vector3 targetDirection = relativeMoveInputVector.normalized;
-                Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, targetDirection, 1 - Mathf.Exp(-10 * deltaTime)).normalized;
-                currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
+                if (relativeMoveInputVector != Vector3.zero)
+                {
+                    Vector3 targetDirection = relativeMoveInputVector.normalized;
+                    Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, targetDirection, 1 - Mathf.Exp(-10 * deltaTime)).normalized;
+                    currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
+                }
             }
+
         }
     }
 
-    public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
+    public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)// 在这个函数里边Time.deltaTime等于deltaTime
     {
         this.currentVelocity = currentVelocity;
         if (motor.GroundingStatus.IsStableOnGround)// 如果玩家站在地面上
         {
-            _ = motor.GetDirectionTangentToSurface(currentVelocity, motor.GroundingStatus.GroundNormal) * currentVelocity.magnitude;
-            Vector3 inputRight = Vector3.Cross(relativeMoveInputVector, motor.CharacterUp);
-            Vector3 reorientedInput = Vector3.Cross(motor.GroundingStatus.GroundNormal, inputRight).normalized * relativeMoveInputVector.magnitude;
-            targetMoveVelocity = reorientedInput * maxMoveSpeed;
-            if (relativeMoveInputVector != Vector3.zero)
-                currentVelocity = Vector3.Lerp(currentVelocity, targetMoveVelocity, playerInputController.allInputTime);
-            else
-                currentVelocity = Vector3.Lerp(currentVelocity, targetMoveVelocity, 1 - playerInputController.allInputTime);
+            // if (playerInputController.playerState != PlayerState.Attack)
+            // {
+            //     _ = motor.GetDirectionTangentToSurface(currentVelocity, motor.GroundingStatus.GroundNormal) * currentVelocity.magnitude;
+            //     Vector3 inputRight = Vector3.Cross(relativeMoveInputVector, motor.CharacterUp);
+            //     Vector3 reorientedInput = Vector3.Cross(motor.GroundingStatus.GroundNormal, inputRight).normalized * relativeMoveInputVector.magnitude;
+            //     targetMoveVelocity = reorientedInput * maxMoveSpeed;
+            //     if (relativeMoveInputVector != Vector3.zero)
+            //         currentVelocity = Vector3.Lerp(currentVelocity, targetMoveVelocity, playerInputController.allInputTime);
+            //     else
+            //         currentVelocity = Vector3.Lerp(currentVelocity, targetMoveVelocity, 1 - playerInputController.allInputTime);
+            // }
+            // else
+            // {
+            //     currentVelocity = Vector3.zero;
+            // }
+            currentVelocity = rootMotionSpeed;
+
         }
         else
         {
             currentVelocity += gravity * deltaTime;
         }
+    }
+
+    void OnAnimatorMove()
+    {
+        rootMotionSpeed = playerInputController.animator.deltaPosition / Time.deltaTime;
     }
 
 }
