@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Cinemachine;
 using KinematicCharacterController.Examples;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,7 +19,8 @@ public enum PlayerState
     Idle,
     Run,
     Dash,
-    Attack
+    Attack,
+    Defense
 }
 
 public class PlayerInputController : MonoBehaviour
@@ -36,6 +38,7 @@ public class PlayerInputController : MonoBehaviour
     public CinemachineTargetGroup cameraTargetGroup;
     public List<GameObject> visibleEnemy;
     public GameObject nearestEnemy;
+    public Collider attackCollider;
 
     private CharacterController characterController;
     private Vector2 moveInput;
@@ -54,6 +57,7 @@ public class PlayerInputController : MonoBehaviour
     private CinemachineFreeLook unLockCamera;
 
     private bool isPressAttack = false;// 只要点过一下攻击键，就会置true
+    private bool isPressDefense = false;// 只要点过一下防御键，就会置true
 
     void Start()
     {
@@ -70,6 +74,7 @@ public class PlayerInputController : MonoBehaviour
         HandlePlayerInput();
         UpdateInputTime();
         UpdatePlayerState();
+        UpdateDefenseAnimationState();
         UpdateAnimationRefreshMode();
     }
 
@@ -81,7 +86,7 @@ public class PlayerInputController : MonoBehaviour
     {
         moveInput = context.ReadValue<Vector2>();
 
-        forwardTargetSpeed = (moveInput.x != 0 || moveInput.y != 0) ? 1f : 0f;// 很奇怪，moveInput.y是前后移动的输入
+        forwardTargetSpeed = (moveInput.x != 0 || moveInput.y != 0) ? 3f : 0f;// 很奇怪，moveInput.y是前后移动的输入
         verticalTargetSpeed = moveInput.y;
         HorizontalTargetSpeed = moveInput.x;
     }
@@ -110,6 +115,20 @@ public class PlayerInputController : MonoBehaviour
         if (isPressAttack && playerState != PlayerState.Attack)
         {
             animator.SetBool("Attack", true);
+        }
+    }
+
+    public void PlayerDefense(InputAction.CallbackContext context)
+    {
+        isPressDefense = context.ReadValueAsButton();
+        animator.SetBool("Defense", isPressDefense);
+        if (isPressDefense && playerState != PlayerState.Attack)
+        {
+            playerState = PlayerState.Defense;
+        }
+        if (!isPressDefense && playerState == PlayerState.Defense)
+        {
+            playerState = PlayerState.Idle;
         }
     }
 
@@ -210,16 +229,20 @@ public class PlayerInputController : MonoBehaviour
     void UpdatePlayerState()
     {
         // 疾跑判断
-        playerState = playerState != PlayerState.Dash ? playerState == PlayerState.Attack ? playerState : (moveInput.x != 0 || moveInput.y != 0) ? PlayerState.Run : PlayerState.Idle : PlayerState.Dash;
-        playerState = (moveInput.x == 0 && moveInput.y == 0 && playerState != PlayerState.Attack) ? PlayerState.Idle : playerState;
+        if (playerState != PlayerState.Attack && playerState != PlayerState.Defense)
+        {
+            playerState = playerState != PlayerState.Dash ? (moveInput.x != 0 || moveInput.y != 0) ? PlayerState.Run : PlayerState.Idle : PlayerState.Dash;
+            playerState = (moveInput.x == 0 && moveInput.y == 0) ? PlayerState.Idle : playerState;
+        }
 
-        forwardTargetSpeed = (playerState == PlayerState.Dash) && (moveInput.x != 0 || moveInput.y != 0) ? 2f : forwardTargetSpeed;
+        forwardTargetSpeed = (playerState == PlayerState.Dash) && (moveInput.x != 0 || moveInput.y != 0) ? 4f : forwardTargetSpeed;
 
         characterController.maxMoveSpeed = playerState == PlayerState.Dash ? 3.84f * 2 : 3.84f;
         animator.SetBool("IsDashing", playerState == PlayerState.Dash);
         animator.SetBool("Move", forwardTargetSpeed != 0);
     }
 
+    #region AnimatorEvent
     /// <summary>
     /// 动画开始时/预输入开始时清除攻击预输入标记
     /// </summary>
@@ -242,12 +265,18 @@ public class PlayerInputController : MonoBehaviour
     /// </summary>
     void IsExitAttackState()
     {
-        if (!animator.GetBool("Attack") && forwardSpeed != 0)
+        if (!animator.GetBool("Attack"))
         {
-            playerState = PlayerState.Idle;
+            if (forwardSpeed != 0)
+                playerState = PlayerState.Idle;
+            if (animator.GetBool("Defense"))
+                playerState = PlayerState.Defense;
         }
     }
 
+    /// <summary>
+    /// 攻击动画结尾判断是否退出攻击状态
+    /// </summary>
     void IsExitAttackStateFinal()
     {
         if (!animator.GetBool("Attack"))
@@ -264,4 +293,31 @@ public class PlayerInputController : MonoBehaviour
         playerState = PlayerState.Attack;
     }
 
+    /// <summary>
+    /// 松开防御键，退出防御状态
+    /// </summary>
+    void UpdateDefenseAnimationState()
+    {
+        animator.speed = !isPressDefense ? 1f : animator.speed;
+    }
+
+    /// <summary>
+    /// 长按防御键，一直处于防御状态
+    /// </summary>
+    void StopDefenseAnimation()
+    {
+        animator.speed = animator.GetBool("Defense") ? 0f : 1f;
+    }
+
+    void EnableAttackDetermine()
+    {
+        attackCollider.enabled = true;
+    }
+
+    void DisableAttackDetermine()
+    {
+        attackCollider.enabled = false;
+    }
+
+    #endregion
 }

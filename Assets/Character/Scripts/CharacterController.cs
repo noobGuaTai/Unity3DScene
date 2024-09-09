@@ -94,12 +94,20 @@ public class CharacterController : MonoBehaviour, ICharacterController
             // 锁定状态下的旋转自身
             if (lookInputVector != Vector3.zero && playerInputController.playerState != PlayerState.Dash)
             {
-                // Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, lookInputVector, 1 - Mathf.Exp(rotationSharpness * deltaTime)).normalized;
-                // currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp); 
-                // print(smoothLookInputDirection);
-                Vector3 smoothLookInputDirection = Vector3.Lerp(motor.CharacterForward, lookInputVector, 1f).normalized;
-                currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
-                // currentRotation = Quaternion.LookRotation(lookInputVector, motor.CharacterUp);
+                // 朝镜头前方旋转
+                // Vector3 smoothLookInputDirection = Vector3.Lerp(motor.CharacterForward, lookInputVector, 0.5f).normalized;
+                // currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
+
+                // 朝目标旋转
+                Vector3 directionToTarget = (playerInputController.cameraTargetGroup.m_Targets[1].target.position - motor.Transform.position).normalized;
+                // 如果目标在不同的高度，保持角色水平旋转
+                directionToTarget = Vector3.ProjectOnPlane(directionToTarget, motor.CharacterUp).normalized;
+                if (directionToTarget != Vector3.zero)
+                {
+                    Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, directionToTarget, 1 - Mathf.Exp(-10 * deltaTime)).normalized;
+                    currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
+                }
+
             }
             else
             {

@@ -49746,6 +49746,13 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
+  - time: 0.2
+    functionName: EnableAttackDetermine
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
   - time: 0.23333333
     functionName: SaveAttackSign
     data: 
@@ -49783,6 +49790,13 @@ AnimationClip:
     messageOptions: 0
   - time: 0.4
     functionName: SaveAttackSign
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.4
+    functionName: DisableAttackDetermine
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
