@@ -7,7 +7,8 @@ public enum Enemy1State
 {
     Idle,
     Chase,
-    Attack
+    Attack,
+    UnderAttack
 }
 
 [Serializable]
@@ -29,6 +30,8 @@ public class Enemy1Parameters
     public Tween tween;
     public float animatorSpeedTarget;// 对动画的值插值的中间值
     public Vector3 directionToPlayer;
+    public Enemy1Attribute enemy1Attribute;
+    public Collider weaponCollider;
 }
 public class Enemy1FSM : MonoBehaviour
 {
@@ -41,6 +44,8 @@ public class Enemy1FSM : MonoBehaviour
         parameters.tf = transform;
         parameters.animator = GetComponent<Animator>();
         parameters.tween = GetComponent<Tween>();
+        parameters.enemy1Attribute = GetComponent<Enemy1Attribute>();
+        parameters.player = GameObject.FindGameObjectWithTag("Player");
     }
 
     void Start()
@@ -91,6 +96,7 @@ public class Enemy1FSM : MonoBehaviour
         parameters.distanceToPlayer = Vector3.Distance(parameters.tf.position, parameters.player.transform.position);
     }
 
+    #region AnimatorEvent
     private void EnterChaseState()
     {
         currentState.OnExit();
@@ -103,5 +109,27 @@ public class Enemy1FSM : MonoBehaviour
     {
         parameters.animator.SetBool("Attack", false);
     }
+
+    void EnterUnderAttackState()
+    {
+        ChangeState(Enemy1State.UnderAttack);
+    }
+
+    void ExitUnderAttackState()
+    {
+        ChangeState(Enemy1State.Idle);
+    }
+
+    void EnableAttackDetermine()
+    {
+        parameters.weaponCollider.enabled = true;
+    }
+
+    void DisableAttackDetermine()
+    {
+        parameters.weaponCollider.enabled = false;
+    }
+
+    #endregion
 
 }

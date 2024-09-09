@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class EnemyAttribute : MonoBehaviour
 {
-    public float health = 100f;
-    public float attack = 10f;
+    public float health;
+    public float attack;
+    public float healthMax;
+
+    public virtual void UnderAttack(float value)
+    {
+        
+    }
 }

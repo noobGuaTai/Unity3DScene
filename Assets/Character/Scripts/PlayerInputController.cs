@@ -20,6 +20,7 @@ public enum PlayerState
     Run,
     Dash,
     Attack,
+    UnderAttack,
     Defense
 }
 
@@ -44,6 +45,7 @@ public class PlayerInputController : MonoBehaviour
     private Vector2 moveInput;
     private Vector2 lookInput;
     private PlayerCharacterInputs playerCharacterInputs;
+    private PlayerAttribute playerAttribute;
     private Transform selfTransform;
     public float forwardSpeed = 0f;  // 未锁定 当前速度(前后)
     public float forwardTargetSpeed = 0f; // 未锁定 目标速度(前后)
@@ -67,6 +69,7 @@ public class PlayerInputController : MonoBehaviour
         playerCharacterInputs = new PlayerCharacterInputs();
         lockCamera = GameObject.Find("LockCamera").GetComponent<CinemachineVirtualCamera>();
         unLockCamera = GameObject.Find("UnLockCamera").GetComponent<CinemachineFreeLook>();
+        playerAttribute = GetComponent<PlayerAttribute>();
     }
 
     void Update()
@@ -205,22 +208,32 @@ public class PlayerInputController : MonoBehaviour
         {
             if (nearestEnemy != null)
             {
-                cameraTargetGroup.AddMember(nearestEnemy.transform, 0.5f, 0);
-                cameraMode = CameraMode.Lock;
-                animator.SetBool("LockCamera", true);
-                lockCamera.Priority = 10;
-                unLockCamera.Priority = 5;
+                LockCamera();
             }
         }
         else
         {
-            cameraTargetGroup.RemoveMember(cameraTargetGroup?.m_Targets[1].target);
-            cameraMode = CameraMode.UnLock;
-            animator.SetBool("LockCamera", false);
-            lockCamera.Priority = 5;
-            unLockCamera.Priority = 10;
+            UnLockCamera();
         }
 
+    }
+
+    public void LockCamera()
+    {
+        cameraTargetGroup.AddMember(nearestEnemy.transform, 0.5f, 0);
+        cameraMode = CameraMode.Lock;
+        animator.SetBool("LockCamera", true);
+        lockCamera.Priority = 10;
+        unLockCamera.Priority = 5;
+    }
+
+    public void UnLockCamera()
+    {
+        cameraTargetGroup.RemoveMember(cameraTargetGroup?.m_Targets[1].target);
+        cameraMode = CameraMode.UnLock;
+        animator.SetBool("LockCamera", false);
+        lockCamera.Priority = 5;
+        unLockCamera.Priority = 10;
     }
 
     /// <summary>
@@ -304,9 +317,11 @@ public class PlayerInputController : MonoBehaviour
     /// <summary>
     /// 长按防御键，一直处于防御状态
     /// </summary>
-    void StopDefenseAnimation()
+    void StayDefenseAnimation()
     {
-        animator.speed = animator.GetBool("Defense") ? 0f : 1f;
+        // animator.speed = animator.GetBool("Defense") ? 0f : 1f;
+        if (animator.GetBool("Defense"))
+            animator.Play("defense_01", 0, 0.5f);
     }
 
     void EnableAttackDetermine()
@@ -317,6 +332,25 @@ public class PlayerInputController : MonoBehaviour
     void DisableAttackDetermine()
     {
         attackCollider.enabled = false;
+    }
+
+    void NormalDefense()
+    {
+        if (playerAttribute.defended)
+        {
+            playerAttribute.ChangeHealth(playerAttribute.defendedValue);
+            playerAttribute.defended = false;
+            print("normalDefense");
+        }
+    }
+
+    void PerfectDefense()
+    {
+        if (playerAttribute.defended)
+        {
+            playerAttribute.defended = false;
+            print("perfectDefense");
+        }
     }
 
     #endregion

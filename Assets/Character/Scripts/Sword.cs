@@ -4,12 +4,13 @@ using UnityEngine;
 
 public class Sword : MonoBehaviour
 {
+    public GameObject player;
     public int ENEMYLAYER = 6;
     void OnTriggerEnter(Collider other)
     {
         if(other.gameObject.layer == ENEMYLAYER)
         {
-            print("Attack");
+            other.gameObject.GetComponent<EnemyAttribute>().UnderAttack(player.GetComponent<PlayerAttribute>().attack);
         }
     }
 }

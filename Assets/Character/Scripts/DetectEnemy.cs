@@ -24,6 +24,7 @@ public class DetectEnemy : MonoBehaviour
     {
         DetectEnemies();
         CalculateNearestEnemy();
+        UpdateLockTarget();
     }
 
     /// <summary>
@@ -49,8 +50,15 @@ public class DetectEnemy : MonoBehaviour
         // 如果敌人不在检测范围内
         List<string> enemiesToRemove = new List<string>();
         foreach (var enemy in enemies)
+        {
+            if (enemy.Value == null)
+            {
+                enemiesToRemove.Add(enemy.Key);
+                continue;
+            }
             if (!targetsInRadius.Contains(enemy.Value.GetComponent<Collider>()))
                 enemiesToRemove.Add(enemy.Key);
+        }
         foreach (var enemy in enemiesToRemove)
             enemies.Remove(enemy);
         playerInputController.visibleEnemy = enemies.Values.ToList();
@@ -79,6 +87,24 @@ public class DetectEnemy : MonoBehaviour
         else
             nearestEnemy = null;
         playerInputController.nearestEnemy = nearestEnemy;
+    }
+
+    /// <summary>
+    /// 锁定目标丢失后，重新选择锁定目标
+    /// </summary>
+    void UpdateLockTarget()
+    {
+        if (playerInputController.cameraTargetGroup.m_Targets.Length > 1 && playerInputController.cameraTargetGroup.m_Targets[1].target == null)
+        {
+            if (playerInputController.nearestEnemy != null)
+            {
+                playerInputController.cameraTargetGroup.m_Targets[1].target = playerInputController.nearestEnemy.transform;
+            }
+            else
+            {
+                playerInputController.UnLockCamera();
+            }
+        }
     }
 
     void OnDrawGizmos()

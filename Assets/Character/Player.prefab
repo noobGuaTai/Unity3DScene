@@ -121,9 +121,10 @@ GameObject:
   - component: {fileID: 2136581727961400276}
   - component: {fileID: 2944923751173958350}
   - component: {fileID: 5717291752713168079}
+  - component: {fileID: 6889402522114195381}
   m_Layer: 3
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -556,6 +557,20 @@ MonoBehaviour:
   - m_Rig: {fileID: 8347581755410043366}
     m_Active: 1
   m_Effectors: []
+--- !u!114 &6889402522114195381
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6831647186334045021}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f86e5f50a172104fbdd53fa897c54d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health: 100
+  attack: 20
 --- !u!1 &7384832381694108727
 GameObject:
   m_ObjectHideFlags: 0
@@ -45705,10 +45720,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Radius: 0.17429027
-  m_Height: 2.09
+  m_Radius: 0.4
+  m_Height: 2.25
   m_Direction: 0
-  m_Center: {x: -0.53, y: 0.00000018064814, z: -0.019500215}
+  m_Center: {x: -0.79, y: 0.00000018064814, z: -0.019500215}
 --- !u!114 &325302779536081859
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -45721,6 +45736,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b577534b4edcb354985983f695800ff7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  player: {fileID: 6831647186334045021}
   ENEMYLAYER: 6
 --- !u!4 &7450523399606948257 stripped
 Transform:
