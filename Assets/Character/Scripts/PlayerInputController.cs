@@ -58,7 +58,7 @@ public class PlayerInputController : MonoBehaviour
     private CinemachineVirtualCamera lockCamera;
     private CinemachineFreeLook unLockCamera;
 
-    private bool isPressAttack = false;// 只要点过一下攻击键，就会置true
+    public bool isPressAttack = false;// 只要点过一下攻击键，就会置true
     private bool isPressDefense = false;// 只要点过一下防御键，就会置true
 
     void Start()
@@ -77,7 +77,10 @@ public class PlayerInputController : MonoBehaviour
         HandlePlayerInput();
         UpdateInputTime();
         UpdatePlayerState();
-        UpdateDefenseAnimationState();
+    }
+
+    void FixedUpdate()
+    {
         UpdateAnimationRefreshMode();
     }
 
@@ -117,21 +120,24 @@ public class PlayerInputController : MonoBehaviour
         isPressAttack = context.ReadValueAsButton() == true ? true : isPressAttack;
         if (isPressAttack && playerState != PlayerState.Attack)
         {
-            animator.SetBool("Attack", true);
+            animator.SetTrigger("Attack");//bug
         }
     }
 
     public void PlayerDefense(InputAction.CallbackContext context)
     {
         isPressDefense = context.ReadValueAsButton();
-        animator.SetBool("Defense", isPressDefense);
-        if (isPressDefense && playerState != PlayerState.Attack)
+        if (playerState != PlayerState.Attack && isPressDefense)
         {
+            animator.SetBool("Defense", isPressDefense);
             playerState = PlayerState.Defense;
         }
+            
+        // 退出防御判定
         if (!isPressDefense && playerState == PlayerState.Defense)
         {
             playerState = PlayerState.Idle;
+            animator.SetBool("Defense", isPressDefense);
         }
     }
 
@@ -261,40 +267,59 @@ public class PlayerInputController : MonoBehaviour
     /// </summary>
     void ClearAttackSign()
     {
-        animator.SetBool("Attack", false);
+        // animator.SetBool("Attack", false);
         isPressAttack = false;
+        animator.ResetTrigger("Attack");
     }
 
     /// <summary>
-    /// 记录攻击预输入
+    /// 攻击后半段，记录攻击/防御/移动输入,并判断是否退出攻击状态
     /// </summary>
     void SaveAttackSign()
     {
-        animator.SetBool("Attack", isPressAttack);
+        if (isPressAttack)
+        {
+            animator.SetTrigger("Attack");
+            print("attack");
+            isPressAttack = false;
+            return;
+        }
+
+        if (isPressDefense)
+        {
+            animator.SetBool("Defense", isPressDefense);
+            playerState = PlayerState.Defense;
+            return;
+        }
+
+        if (forwardSpeed != 0)
+        {
+            playerState = PlayerState.Idle;
+            animator.ResetTrigger("Attack");
+            return;
+        }
+            
+        // if (animator.GetBool("Defense"))
+        //     playerState = PlayerState.Defense;
     }
 
     /// <summary>
     /// 每个攻击动作后摇可取消时判断是否退出攻击状态
     /// </summary>
-    void IsExitAttackState()
-    {
-        if (!animator.GetBool("Attack"))
-        {
-            if (forwardSpeed != 0)
-                playerState = PlayerState.Idle;
-            if (animator.GetBool("Defense"))
-                playerState = PlayerState.Defense;
-        }
-    }
+    // void IsExitAttackState()
+    // {
+
+    // }
 
     /// <summary>
     /// 攻击动画结尾判断是否退出攻击状态
     /// </summary>
     void IsExitAttackStateFinal()
     {
-        if (!animator.GetBool("Attack"))
+        // if (!animator.GetBool("Attack"))
         {
             playerState = PlayerState.Idle;
+            print("退出攻击");
         }
     }
 
@@ -304,14 +329,6 @@ public class PlayerInputController : MonoBehaviour
     void SetAttackState()
     {
         playerState = PlayerState.Attack;
-    }
-
-    /// <summary>
-    /// 松开防御键，退出防御状态
-    /// </summary>
-    void UpdateDefenseAnimationState()
-    {
-        animator.speed = !isPressDefense ? 1f : animator.speed;
     }
 
     /// <summary>
@@ -338,7 +355,7 @@ public class PlayerInputController : MonoBehaviour
     {
         if (playerAttribute.defended)
         {
-            playerAttribute.ChangeHealth(playerAttribute.defendedValue);
+            playerAttribute.ChangeHealth(playerAttribute.defendedValue / 10);
             playerAttribute.defended = false;
             print("normalDefense");
         }
@@ -351,6 +368,16 @@ public class PlayerInputController : MonoBehaviour
             playerAttribute.defended = false;
             print("perfectDefense");
         }
+    }
+
+    void EnterUnderAttackState()
+    {
+        playerState = PlayerState.UnderAttack;
+    }
+
+    void ExitUnderAttackState()
+    {
+        playerState = PlayerState.UnderAttack;
     }
 
     #endregion

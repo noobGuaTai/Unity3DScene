@@ -92,7 +92,7 @@ public class CharacterController : MonoBehaviour, ICharacterController
         if (playerInputController.cameraMode == CameraMode.Lock)
         {
             // 锁定状态下的旋转自身
-            if (lookInputVector != Vector3.zero && playerInputController.playerState != PlayerState.Dash)
+            if (lookInputVector != Vector3.zero && playerInputController.playerState != PlayerState.Dash && playerInputController.cameraTargetGroup.m_Targets.Length > 1)
             {
                 // 朝镜头前方旋转
                 // Vector3 smoothLookInputDirection = Vector3.Lerp(motor.CharacterForward, lookInputVector, 0.5f).normalized;
@@ -111,7 +111,7 @@ public class CharacterController : MonoBehaviour, ICharacterController
             }
             else
             {
-                if (relativeMoveInputVector != Vector3.zero)
+                if (relativeMoveInputVector != Vector3.zero && playerInputController.playerState != PlayerState.UnderAttack)
                 {
                     Vector3 targetDirection = relativeMoveInputVector.normalized;
                     Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, targetDirection, 1 - Mathf.Exp(-10 * deltaTime)).normalized;

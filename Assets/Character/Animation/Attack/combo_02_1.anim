@@ -51907,7 +51907,7 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.033333335
+  - time: 0
     functionName: ClearAttackSign
     data: 
     objectReferenceParameter: {fileID: 0}
@@ -51921,13 +51921,6 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.3
-    functionName: ClearAttackSign
-    data: 
-    objectReferenceParameter: {fileID: 0}
-    floatParameter: 0
-    intParameter: 0
-    messageOptions: 0
   - time: 0.33333334
     functionName: DisableAttackDetermine
     data: 
@@ -51935,15 +51928,8 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.33333334
-    functionName: SaveAttackSign
-    data: 
-    objectReferenceParameter: {fileID: 0}
-    floatParameter: 0
-    intParameter: 0
-    messageOptions: 0
   - time: 0.36666667
-    functionName: SaveAttackSign
+    functionName: ClearAttackSign
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
@@ -51999,13 +51985,13 @@ AnimationClip:
     intParameter: 0
     messageOptions: 0
   - time: 0.6333333
-    functionName: IsExitAttackState
+    functionName: SaveAttackSign
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.6666667
+  - time: 0.6666666
     functionName: SaveAttackSign
     data: 
     objectReferenceParameter: {fileID: 0}
@@ -52061,7 +52047,7 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.9333334
+  - time: 0.9333333
     functionName: SaveAttackSign
     data: 
     objectReferenceParameter: {fileID: 0}
@@ -52089,28 +52075,28 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 1.0666666
+  - time: 1.0666667
     functionName: SaveAttackSign
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 1.0999999
+  - time: 1.1
     functionName: SaveAttackSign
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 1.1333333
+  - time: 1.1333334
     functionName: SaveAttackSign
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 1.1666666
+  - time: 1.1666667
     functionName: SaveAttackSign
     data: 
     objectReferenceParameter: {fileID: 0}
