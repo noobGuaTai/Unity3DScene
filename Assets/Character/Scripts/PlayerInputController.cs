@@ -281,7 +281,8 @@ public class PlayerInputController : MonoBehaviour
         forwardTargetSpeed = (playerState == PlayerState.Dash) && (moveInput.x != 0 || moveInput.y != 0) ? 4f : forwardTargetSpeed;
 
         animator.SetBool("IsDashing", playerState == PlayerState.Dash);
-        animator.SetBool("Move", forwardTargetSpeed != 0);
+        if (playerState != PlayerState.Attack)
+            animator.SetBool("Move", forwardTargetSpeed != 0);
 
 
     }
@@ -296,6 +297,7 @@ public class PlayerInputController : MonoBehaviour
         typeAhead = TypeAhead.None;
         hasTypeAhead = false;
         animator.SetBool("Attack", false);
+        animator.SetBool("Move", false);
     }
 
     /// <summary>
@@ -347,6 +349,7 @@ public class PlayerInputController : MonoBehaviour
                     break;
                 case TypeAhead.Move:
                     typeAhead = TypeAhead.None;
+                    animator.SetBool("Move", true);
                     playerState = PlayerState.Idle;
                     hasTypeAhead = true;
                     break;
