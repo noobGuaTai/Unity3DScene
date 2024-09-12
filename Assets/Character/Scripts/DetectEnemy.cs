@@ -10,10 +10,13 @@ public class DetectEnemy : MonoBehaviour
     public LayerMask enemyLayer;
     public bool onDrawSphere = false;
 
+
     private Transform tf;
     private PlayerInputController playerInputController;
     private Dictionary<string, GameObject> enemies = new Dictionary<string, GameObject>();
     private int ENEMYLAYER = 6;
+    private Collider[] detectEnemiesCollidersOnAttack;
+
     void Start()
     {
         tf = transform;
@@ -114,19 +117,32 @@ public class DetectEnemy : MonoBehaviour
     /// </summary>
     void DetectEnemiesOnAttack()
     {
+        float detectionRadius = 5.0f;
+        Vector3 playerPosition = transform.position;
+        detectEnemiesCollidersOnAttack = Physics.OverlapSphere(playerPosition, detectionRadius, enemyLayer);
         if (playerInputController.nearestSurroundEnemy == null)
         {
-            float detectionRadius = 5.0f;
-            Vector3 playerPosition = transform.position;
+            // 选择一个最近的敌人
+            float closestDistance = Mathf.Infinity;
+            GameObject closestEnemy = null;
 
-            Collider[] hitColliders = Physics.OverlapSphere(playerPosition, detectionRadius, enemyLayer);
-            foreach (var hitCollider in hitColliders)
+            foreach (var hitCollider in detectEnemiesCollidersOnAttack)
             {
-                playerInputController.nearestSurroundEnemy = hitCollider.gameObject;
+                float distanceToEnemy = Vector3.Distance(playerPosition, hitCollider.transform.position);
+                if (distanceToEnemy < closestDistance)
+                {
+                    closestDistance = distanceToEnemy;
+                    closestEnemy = hitCollider.gameObject;
+                }
             }
+            playerInputController.nearestSurroundEnemy = closestEnemy;
         }
-
+        else
+        {
+            playerInputController.nearestSurroundEnemy = detectEnemiesCollidersOnAttack.Length == 0 ? null : playerInputController.nearestSurroundEnemy;
+        }
     }
+
 
 
     void OnDrawGizmos()

@@ -148,7 +148,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 178321304}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16045599, y: -0.000000008491748, z: 0.000000001380438, w: 0.987043}
+  m_LocalRotation: {x: 0.16045599, y: -0.000000009827629, z: 0.0000000015976022, w: 0.987043}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -361,7 +361,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 334023763}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16045599, y: -0.000000008491748, z: 0.000000001380438, w: 0.987043}
+  m_LocalRotation: {x: 0.16045599, y: -0.000000009827629, z: 0.0000000015976022, w: 0.987043}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -729,7 +729,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 579519057}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16045599, y: 0.000000008491718, z: -0.0000000013804334, w: 0.987043}
+  m_LocalRotation: {x: 0.16045599, y: 0.000000008419243, z: -0.0000000013686514, w: 0.987043}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1145,7 +1145,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16045599, y: -0.000000008491748, z: 0.000000001380438, w: 0.987043}
+  m_LocalRotation: {x: 0.16045599, y: -0.000000009827629, z: 0.0000000015976022, w: 0.987043}
   m_LocalPosition: {x: 0, y: 4, z: -6.472}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1396,7 +1396,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1187373736}
-  - component: {fileID: 1187373735}
   m_Layer: 0
   m_Name: CameraFollow
   m_TagString: Untagged
@@ -1404,49 +1403,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1187373735
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1187373734}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76c78ea4b6d68e3488355e215a202146, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mouseSensitivity: 1.2
-  cameraRotatingSpeed: 80
-  cameraYSpeed: 5
-  _armLengthCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  _scrollSpeed: 5
-  scrollMinDistance: -10
-  scrollMaxDistance: -3
-  cameraOffset: 1.2
 --- !u!4 &1187373736
 Transform:
   m_ObjectHideFlags: 0

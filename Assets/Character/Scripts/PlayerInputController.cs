@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Cinemachine;
 using KinematicCharacterController.Examples;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -21,7 +22,8 @@ public enum PlayerState
     Dash,
     Attack,
     UnderAttack,
-    Defense
+    Defense,
+    Avoid
 }
 
 /// <summary>
@@ -41,8 +43,6 @@ public class PlayerInputController : MonoBehaviour
     public Animator animator;
     public CameraMode cameraMode = CameraMode.UnLock;
     public PlayerState playerState = PlayerState.Idle;
-    public float walkSpeed = 5f;
-    public float runSpeed = 10f;
     public float allInputTime = 0f;// 玩家输入的时长(x和y)
     public float xInputTime = 0f;// 玩家输入的时长(x)
     public float zInputTime = 0f;// 玩家输入的时长(z)
@@ -71,6 +71,7 @@ public class PlayerInputController : MonoBehaviour
 
     public bool isPressAttack = false;// 只要点过一下攻击键，就会置true
     private bool isPressDefense = false;// 只要点过一下防御键，就会置true
+    private bool isPressAvoid = false;// 只要点过一下闪避键，就会置true
 
     public TypeAhead typeAhead = TypeAhead.None;// 预输入类型
     private bool hasTypeAhead = false;// 是否有预输入
@@ -134,7 +135,6 @@ public class PlayerInputController : MonoBehaviour
         if (isPressAttack && playerState != PlayerState.Attack)
         {
             animator.SetBool("Attack", true);
-            print("enterAttack");
         }
     }
 
@@ -152,6 +152,16 @@ public class PlayerInputController : MonoBehaviour
         {
             playerState = PlayerState.Idle;
             animator.SetBool("Defense", isPressDefense);
+        }
+    }
+
+    public void PlayerAvoid(InputAction.CallbackContext context)
+    {
+        isPressAvoid = context.ReadValueAsButton() == true ? true : isPressAvoid;
+        if (isPressAvoid && playerState != PlayerState.Avoid && playerState != PlayerState.UnderAttack)
+        {
+            animator.SetBool("Avoid", true);
+            playerState = PlayerState.Avoid;
         }
     }
 
@@ -191,8 +201,8 @@ public class PlayerInputController : MonoBehaviour
                 horizontalSpeed = Mathf.Lerp(horizontalSpeed, HorizontalTargetSpeed, 1 - zInputTime);
             else
                 horizontalSpeed = Mathf.Lerp(horizontalSpeed, HorizontalTargetSpeed, zInputTime);
-            animator.SetFloat("VerticalSpeed", horizontalSpeed);
-            animator.SetFloat("HorizontalSpeed", verticalSpeed);
+            animator.SetFloat("VerticalSpeed", verticalSpeed);
+            animator.SetFloat("HorizontalSpeed", horizontalSpeed);
         }
     }
 
@@ -270,9 +280,10 @@ public class PlayerInputController : MonoBehaviour
 
         forwardTargetSpeed = (playerState == PlayerState.Dash) && (moveInput.x != 0 || moveInput.y != 0) ? 4f : forwardTargetSpeed;
 
-        characterController.maxMoveSpeed = playerState == PlayerState.Dash ? 3.84f * 2 : 3.84f;
         animator.SetBool("IsDashing", playerState == PlayerState.Dash);
         animator.SetBool("Move", forwardTargetSpeed != 0);
+
+
     }
 
     #region AnimatorEvent
@@ -323,7 +334,6 @@ public class PlayerInputController : MonoBehaviour
             switch (typeAhead)
             {
                 case TypeAhead.Attack:
-                    print("attack");
                     typeAhead = TypeAhead.None;
                     animator.SetBool("Attack", true);
                     isPressAttack = false;
@@ -337,7 +347,6 @@ public class PlayerInputController : MonoBehaviour
                     break;
                 case TypeAhead.Move:
                     typeAhead = TypeAhead.None;
-                    // animator.SetFloat("VerticalSpeed", 0.01f);
                     playerState = PlayerState.Idle;
                     hasTypeAhead = true;
                     break;
@@ -350,7 +359,7 @@ public class PlayerInputController : MonoBehaviour
     /// </summary>
     void ExitAttackStateFinal()
     {
-        // if (!animator.GetBool("Attack"))
+        if (!hasTypeAhead)
         {
             playerState = PlayerState.Idle;
         }
@@ -411,6 +420,12 @@ public class PlayerInputController : MonoBehaviour
     void ExitUnderAttackState()
     {
         playerState = PlayerState.UnderAttack;
+    }
+
+    void ExitAvoidState()
+    {
+        playerState = PlayerState.Idle;
+        animator.SetBool("Avoid", false);
     }
 
     #endregion

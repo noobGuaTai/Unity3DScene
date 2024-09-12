@@ -18,8 +18,6 @@ public class CharacterController : MonoBehaviour, ICharacterController
     public KinematicCharacterMotor motor;
     public Vector3 relativeMoveInputVector;// 相对于相机的移动向量
     public Vector3 lookInputVector;// 相机方向输入变量
-    public float maxMoveSpeed = 5f;// 最大移动速度
-
 
     private Vector3 gravity = new Vector3(0, -10f, 0);
     public Vector3 currentVelocity = Vector3.zero;
