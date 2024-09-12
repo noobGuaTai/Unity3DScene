@@ -7,12 +7,13 @@ public class DetectEnemy : MonoBehaviour
 {
     public float radius = 20f;  // 扇形的半径
     public float angle = 60f;  // 扇形的角度
-    public LayerMask targetLayer;
+    public LayerMask enemyLayer;
     public bool onDrawSphere = false;
 
     private Transform tf;
     private PlayerInputController playerInputController;
     private Dictionary<string, GameObject> enemies = new Dictionary<string, GameObject>();
+    private int ENEMYLAYER = 6;
     void Start()
     {
         tf = transform;
@@ -23,7 +24,8 @@ public class DetectEnemy : MonoBehaviour
     void Update()
     {
         DetectEnemies();
-        CalculateNearestEnemy();
+        CalculateNearestDetectEnemy();
+        DetectEnemiesOnAttack();
         UpdateLockTarget();
     }
 
@@ -35,7 +37,7 @@ public class DetectEnemy : MonoBehaviour
         Vector3 camPosition = playerInputController.followedCamera.transform.position;
         Vector3 camForward = playerInputController.followedCamera.transform.forward;
 
-        Collider[] targetsInRadius = Physics.OverlapSphere(camPosition, radius, targetLayer);
+        Collider[] targetsInRadius = Physics.OverlapSphere(camPosition, radius, enemyLayer);
 
         foreach (Collider target in targetsInRadius)
         {
@@ -65,9 +67,9 @@ public class DetectEnemy : MonoBehaviour
     }
 
     /// <summary>
-    /// 计算最近的敌人
+    /// 计算相机检测到的敌人中，最近的敌人
     /// </summary>
-    void CalculateNearestEnemy()
+    void CalculateNearestDetectEnemy()
     {
         GameObject nearestEnemy;
         if (enemies.Count > 0)
@@ -86,7 +88,7 @@ public class DetectEnemy : MonoBehaviour
         }
         else
             nearestEnemy = null;
-        playerInputController.nearestEnemy = nearestEnemy;
+        playerInputController.nearestDetectEnemy = nearestEnemy;
     }
 
     /// <summary>
@@ -96,9 +98,9 @@ public class DetectEnemy : MonoBehaviour
     {
         if (playerInputController.cameraTargetGroup.m_Targets.Length > 1 && playerInputController.cameraTargetGroup.m_Targets[1].target == null)
         {
-            if (playerInputController.nearestEnemy != null)
+            if (playerInputController.nearestDetectEnemy != null)
             {
-                playerInputController.cameraTargetGroup.m_Targets[1].target = playerInputController.nearestEnemy.transform;
+                playerInputController.cameraTargetGroup.m_Targets[1].target = playerInputController.nearestDetectEnemy.transform;
             }
             else
             {
@@ -106,6 +108,26 @@ public class DetectEnemy : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// 攻击时，检测最近的敌人，用于近战吸附
+    /// </summary>
+    void DetectEnemiesOnAttack()
+    {
+        if (playerInputController.nearestSurroundEnemy == null)
+        {
+            float detectionRadius = 5.0f;
+            Vector3 playerPosition = transform.position;
+
+            Collider[] hitColliders = Physics.OverlapSphere(playerPosition, detectionRadius, enemyLayer);
+            foreach (var hitCollider in hitColliders)
+            {
+                playerInputController.nearestSurroundEnemy = hitCollider.gameObject;
+            }
+        }
+
+    }
+
 
     void OnDrawGizmos()
     {

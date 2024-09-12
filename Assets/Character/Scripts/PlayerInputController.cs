@@ -24,10 +24,20 @@ public enum PlayerState
     Defense
 }
 
+/// <summary>
+/// 预输入类型
+/// </summary>
+public enum TypeAhead
+{
+    None,
+    Attack,
+    Defense,
+    Move
+}
+
 public class PlayerInputController : MonoBehaviour
 {
     public Camera followedCamera;
-    // public Transform cameraFollowPoint;
     public Animator animator;
     public CameraMode cameraMode = CameraMode.UnLock;
     public PlayerState playerState = PlayerState.Idle;
@@ -38,7 +48,8 @@ public class PlayerInputController : MonoBehaviour
     public float zInputTime = 0f;// 玩家输入的时长(z)
     public CinemachineTargetGroup cameraTargetGroup;
     public List<GameObject> visibleEnemy;
-    public GameObject nearestEnemy;
+    public GameObject nearestDetectEnemy;
+    public GameObject nearestSurroundEnemy;
     public Collider attackCollider;
 
     private CharacterController characterController;
@@ -61,10 +72,12 @@ public class PlayerInputController : MonoBehaviour
     public bool isPressAttack = false;// 只要点过一下攻击键，就会置true
     private bool isPressDefense = false;// 只要点过一下防御键，就会置true
 
+    public TypeAhead typeAhead = TypeAhead.None;// 预输入类型
+    private bool hasTypeAhead = false;// 是否有预输入
+
     void Start()
     {
         selfTransform = transform;
-        // animator = GetComponentInChildren<Animator>();
         characterController = GetComponent<CharacterController>();
         playerCharacterInputs = new PlayerCharacterInputs();
         lockCamera = GameObject.Find("LockCamera").GetComponent<CinemachineVirtualCamera>();
@@ -120,7 +133,8 @@ public class PlayerInputController : MonoBehaviour
         isPressAttack = context.ReadValueAsButton() == true ? true : isPressAttack;
         if (isPressAttack && playerState != PlayerState.Attack)
         {
-            animator.SetTrigger("Attack");//bug
+            animator.SetBool("Attack", true);
+            print("enterAttack");
         }
     }
 
@@ -132,7 +146,7 @@ public class PlayerInputController : MonoBehaviour
             animator.SetBool("Defense", isPressDefense);
             playerState = PlayerState.Defense;
         }
-            
+
         // 退出防御判定
         if (!isPressDefense && playerState == PlayerState.Defense)
         {
@@ -212,7 +226,7 @@ public class PlayerInputController : MonoBehaviour
     {
         if (cameraMode == CameraMode.UnLock)
         {
-            if (nearestEnemy != null)
+            if (nearestDetectEnemy != null)
             {
                 LockCamera();
             }
@@ -226,7 +240,7 @@ public class PlayerInputController : MonoBehaviour
 
     public void LockCamera()
     {
-        cameraTargetGroup.AddMember(nearestEnemy.transform, 0.5f, 0);
+        cameraTargetGroup.AddMember(nearestDetectEnemy.transform, 0.5f, 0);
         cameraMode = CameraMode.Lock;
         animator.SetBool("LockCamera", true);
         lockCamera.Priority = 10;
@@ -267,66 +281,85 @@ public class PlayerInputController : MonoBehaviour
     /// </summary>
     void ClearAttackSign()
     {
-        // animator.SetBool("Attack", false);
         isPressAttack = false;
-        animator.ResetTrigger("Attack");
+        typeAhead = TypeAhead.None;
+        hasTypeAhead = false;
+        animator.SetBool("Attack", false);
     }
 
     /// <summary>
-    /// 攻击后半段，记录攻击/防御/移动输入,并判断是否退出攻击状态
+    /// 预输入判定，记录攻击/防御/移动输入,
     /// </summary>
-    void SaveAttackSign()
+    void StayTypeAhead()
     {
-        if (isPressAttack)
+        if ((typeAhead == TypeAhead.None || typeAhead == TypeAhead.Move) && !hasTypeAhead)// 玩家喜欢按住移动键点攻击
         {
-            animator.SetTrigger("Attack");
-            print("attack");
-            isPressAttack = false;
-            return;
-        }
+            if (isPressAttack)
+            {
+                typeAhead = TypeAhead.Attack;
+                return;
+            }
+            if (isPressDefense)
+            {
+                typeAhead = TypeAhead.Defense;
+                return;
+            }
+            if (forwardSpeed != 0)
+            {
+                typeAhead = TypeAhead.Move;
+                return;
+            }
 
-        if (isPressDefense)
-        {
-            animator.SetBool("Defense", isPressDefense);
-            playerState = PlayerState.Defense;
-            return;
         }
-
-        if (forwardSpeed != 0)
-        {
-            playerState = PlayerState.Idle;
-            animator.ResetTrigger("Attack");
-            return;
-        }
-            
-        // if (animator.GetBool("Defense"))
-        //     playerState = PlayerState.Defense;
     }
 
     /// <summary>
-    /// 每个攻击动作后摇可取消时判断是否退出攻击状态
+    /// 根据预输入类型，判断进入哪一个状态
     /// </summary>
-    // void IsExitAttackState()
-    // {
-
-    // }
+    void IsEnterNextState()
+    {
+        if (typeAhead != TypeAhead.None && !hasTypeAhead)
+        {
+            switch (typeAhead)
+            {
+                case TypeAhead.Attack:
+                    print("attack");
+                    typeAhead = TypeAhead.None;
+                    animator.SetBool("Attack", true);
+                    isPressAttack = false;
+                    hasTypeAhead = true;
+                    break;
+                case TypeAhead.Defense:
+                    typeAhead = TypeAhead.None;
+                    animator.SetBool("Defense", isPressDefense);
+                    playerState = PlayerState.Defense;
+                    hasTypeAhead = true;
+                    break;
+                case TypeAhead.Move:
+                    typeAhead = TypeAhead.None;
+                    // animator.SetFloat("VerticalSpeed", 0.01f);
+                    playerState = PlayerState.Idle;
+                    hasTypeAhead = true;
+                    break;
+            }
+        }
+    }
 
     /// <summary>
-    /// 攻击动画结尾判断是否退出攻击状态
+    /// 攻击动画结尾退出攻击状态
     /// </summary>
-    void IsExitAttackStateFinal()
+    void ExitAttackStateFinal()
     {
         // if (!animator.GetBool("Attack"))
         {
             playerState = PlayerState.Idle;
-            print("退出攻击");
         }
     }
 
     /// <summary>
     /// 在攻击开始到攻击后摇结束，玩家处于攻击状态
     /// </summary>
-    void SetAttackState()
+    void EnterAttackState()
     {
         playerState = PlayerState.Attack;
     }

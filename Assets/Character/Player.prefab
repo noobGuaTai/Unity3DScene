@@ -421,10 +421,13 @@ MonoBehaviour:
   zInputTime: 0
   cameraTargetGroup: {fileID: 0}
   visibleEnemy: []
-  nearestEnemy: {fileID: 0}
+  nearestDetectEnemy: {fileID: 0}
+  nearestSurroundEnemy: {fileID: 0}
   attackCollider: {fileID: 1973566851049996192}
   forwardSpeed: 0
   forwardTargetSpeed: 0
+  isPressAttack: 0
+  typeAhead: 0
 --- !u!114 &6952888788708684472
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -439,7 +442,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   radius: 20
   angle: 60
-  targetLayer:
+  enemyLayer:
     serializedVersion: 2
     m_Bits: 64
   onDrawSphere: 0
@@ -570,7 +573,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   health: 100
-  attack: 20
+  attack: 10
+  healthMax: 100
+  defended: 0
+  defendedValue: 0
 --- !u!1 &7384832381694108727
 GameObject:
   m_ObjectHideFlags: 0

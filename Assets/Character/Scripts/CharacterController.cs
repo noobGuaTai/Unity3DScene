@@ -89,10 +89,9 @@ public class CharacterController : MonoBehaviour, ICharacterController
 
     public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
     {
-        if (playerInputController.cameraMode == CameraMode.Lock)
+        if (playerInputController.cameraMode == CameraMode.Lock)// 锁定状态下的旋转自身
         {
-            // 锁定状态下的旋转自身
-            if (lookInputVector != Vector3.zero && playerInputController.playerState != PlayerState.Dash && playerInputController.cameraTargetGroup.m_Targets.Length > 1)
+            if (lookInputVector != Vector3.zero && playerInputController.playerState != PlayerState.Dash && playerInputController.cameraTargetGroup.m_Targets[1].target != null)
             {
                 // 朝镜头前方旋转
                 // Vector3 smoothLookInputDirection = Vector3.Lerp(motor.CharacterForward, lookInputVector, 0.5f).normalized;
@@ -109,7 +108,7 @@ public class CharacterController : MonoBehaviour, ICharacterController
                 }
 
             }
-            else
+            else// 锁定状态下，冲刺
             {
                 if (relativeMoveInputVector != Vector3.zero && playerInputController.playerState != PlayerState.UnderAttack)
                 {
@@ -122,12 +121,25 @@ public class CharacterController : MonoBehaviour, ICharacterController
         else
         {
             // 未锁定状态下的旋转自身
-            if (playerInputController.playerState != PlayerState.Attack)
+            if (playerInputController.playerState != PlayerState.Attack && playerInputController.playerState != PlayerState.Defense)
             {
                 if (relativeMoveInputVector != Vector3.zero)
                 {
                     Vector3 targetDirection = relativeMoveInputVector.normalized;
                     Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, targetDirection, 1 - Mathf.Exp(-10 * deltaTime)).normalized;
+                    currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
+                }
+            }
+
+            if (playerInputController.playerState == PlayerState.Attack && playerInputController.nearestSurroundEnemy != null)// 近战索敌
+            {
+                // 朝目标旋转
+                Vector3 directionToTarget = (playerInputController.nearestSurroundEnemy.transform.position - motor.Transform.position).normalized;
+                // 如果目标在不同的高度，保持角色水平旋转
+                directionToTarget = Vector3.ProjectOnPlane(directionToTarget, motor.CharacterUp).normalized;
+                if (directionToTarget != Vector3.zero)
+                {
+                    Vector3 smoothLookInputDirection = Vector3.Slerp(motor.CharacterForward, directionToTarget, 1 - Mathf.Exp(-10 * deltaTime)).normalized;
                     currentRotation = Quaternion.LookRotation(smoothLookInputDirection, motor.CharacterUp);
                 }
             }
