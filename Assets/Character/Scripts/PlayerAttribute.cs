@@ -23,7 +23,6 @@ public class PlayerAttribute : MonoBehaviour
         {
             playerInputController.animator.SetTrigger(type);
             ChangeHealth(value);
-            playerInputController.playerState = PlayerState.UnderAttack;
         }
         else
         {

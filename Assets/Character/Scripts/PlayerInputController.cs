@@ -98,6 +98,7 @@ public class PlayerInputController : MonoBehaviour
         UpdateAnimationRefreshMode();
     }
 
+    # region PlayerInputSystemEvent
     /// <summary>
     /// 新输入系统的触发移动
     /// </summary>
@@ -158,12 +159,13 @@ public class PlayerInputController : MonoBehaviour
     public void PlayerAvoid(InputAction.CallbackContext context)
     {
         isPressAvoid = context.ReadValueAsButton() == true ? true : isPressAvoid;
-        if (isPressAvoid && playerState != PlayerState.Avoid && playerState != PlayerState.UnderAttack)
+        if (isPressAvoid && playerState != PlayerState.Avoid && playerState != PlayerState.UnderAttack && playerState != PlayerState.Attack)
         {
             animator.SetBool("Avoid", true);
             playerState = PlayerState.Avoid;
         }
     }
+    #endregion
 
     /// <summary>
     /// 把玩家的输入保存到结构体里
@@ -272,7 +274,7 @@ public class PlayerInputController : MonoBehaviour
     void UpdatePlayerState()
     {
         // 疾跑判断
-        if (playerState != PlayerState.Attack && playerState != PlayerState.Defense)
+        if (playerState == PlayerState.Idle || playerState == PlayerState.Run || playerState == PlayerState.Dash)
         {
             playerState = playerState != PlayerState.Dash ? (moveInput.x != 0 || moveInput.y != 0) ? PlayerState.Run : PlayerState.Idle : PlayerState.Dash;
             playerState = (moveInput.x == 0 && moveInput.y == 0) ? PlayerState.Idle : playerState;
@@ -281,8 +283,8 @@ public class PlayerInputController : MonoBehaviour
         forwardTargetSpeed = (playerState == PlayerState.Dash) && (moveInput.x != 0 || moveInput.y != 0) ? 4f : forwardTargetSpeed;
 
         animator.SetBool("IsDashing", playerState == PlayerState.Dash);
-        if (playerState != PlayerState.Attack)
-            animator.SetBool("Move", forwardTargetSpeed != 0);
+        // if (playerState != PlayerState.Attack || playerState != PlayerState.Avoid)
+        //     animator.SetBool("Move", forwardTargetSpeed != 0);
 
 
     }
@@ -298,6 +300,7 @@ public class PlayerInputController : MonoBehaviour
         hasTypeAhead = false;
         animator.SetBool("Attack", false);
         animator.SetBool("Move", false);
+        animator.SetBool("Avoid", false);
     }
 
     /// <summary>
@@ -422,13 +425,23 @@ public class PlayerInputController : MonoBehaviour
 
     void ExitUnderAttackState()
     {
-        playerState = PlayerState.UnderAttack;
+        playerState = PlayerState.Idle;
     }
 
     void ExitAvoidState()
     {
-        playerState = PlayerState.Idle;
-        animator.SetBool("Avoid", false);
+        if (!animator.GetBool("Attack"))
+        {
+            playerState = PlayerState.Idle;
+            animator.SetBool("Avoid", false);
+        }
+        else
+        {
+            animator.SetBool("Move", false);
+            animator.SetBool("Avoid", false);
+            playerState = PlayerState.Attack;
+        }
+
     }
 
     #endregion
